@@ -1,0 +1,51 @@
+--Script by LaTehuana
+
+local http = game:GetService("HttpService")
+local players = game:GetService("Players")
+
+local baseUrl = "https://badges.roproxy.com/v1/users/%s/badges?limit=100&sortOrder=Asc&cursor=%s"
+
+local function scrapeBadgesRecursive(userId, cursor, badgeCount)
+    task.wait()
+    cursor = cursor or ""
+    badgeCount = badgeCount or 0
+    local url = baseUrl:format(userId, cursor)
+    local success, result = pcall(function()
+        return http:GetAsync(url)
+    end)
+
+    if success then
+        if result then
+            local success2, result2 = pcall(function()
+                return http:JSONDecode(result)
+            end)
+
+            if success2 then
+                if result2 then
+                    if result2.nextPageCursor then
+                        badgeCount += 100
+                        cursor = result2.nextPageCursor
+                        return scrapeBadgesRecursive(userId, cursor, badgeCount)
+                    else
+                        badgeCount += #result2.data
+                        return badgeCount
+                    end
+                end
+            end
+        end
+    end
+end
+
+local function onPlayerAdded(player)
+    local leaderstats = Instance.new("Folder")
+    leaderstats.Name = "leaderstats"
+    leaderstats.Parent = player
+
+    local badges = Instance.new("IntValue")
+    badges.Name = "Badges"
+    badges.Parent = leaderstats
+
+    badges.Value = scrapeBadgesRecursive(player.UserId)
+end
+
+players.PlayerAdded:Connect(onPlayerAdded)
