@@ -1,3 +1,5 @@
+--Script by LaTehuana
+
 local badgeservice = game:GetService("BadgeService")
 local id =                --add badge id here
 
